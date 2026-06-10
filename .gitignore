@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# SQLite database (local data)
+prisma/dev.db
+prisma/dev.db-journal
+
+# Large files
+project.zip
+
+# macOS metadata
+._*
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

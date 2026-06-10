@@ -1,0 +1,26 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model MemoryNode {
+  id          String    @id @default(uuid())
+  content     String
+  level       String    // "SHORT" | "MEDIUM" | "LONG"
+  status      String    @default("ACTIVE") // "ACTIVE" | "ARCHIVED" | "COMPLETED"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  targetDate  DateTime? // For Cache (MEDIUM)
+  metadata    String?   // JSON stringified extra properties
+
+  // New fields
+  importance  String    @default("MEDIUM") // "LOW" | "MEDIUM" | "HIGH"
+  tags        String    @default("")       // comma-separated tags
+  source      String    @default("WEB")    // "WEB" | "TELEGRAM"
+  notes       String?                      // Optional long description/notes
+  linkedIds   String    @default("[]")     // JSON stringified array of linked MemoryNode IDs
+}

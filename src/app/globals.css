@@ -1,0 +1,298 @@
+/* --- Cyberpunk / Matrix Design System --- */
+
+:root {
+  --bg-dark: #050505;
+  --bg-panel: #0a0f0a;
+  --bg-panel-hover: #0e160e;
+  
+  --matrix-green: #00ff41;
+  --matrix-green-dim: #008f25;
+  --matrix-green-dark: #003b0f;
+  --matrix-green-glow: rgba(0, 255, 65, 0.2);
+  --matrix-green-glow-strong: rgba(0, 255, 65, 0.4);
+  
+  --neon-purple: #bc00dd;
+  --neon-purple-glow: rgba(188, 0, 221, 0.25);
+  
+  --neon-red: #ff0055;
+  --neon-red-glow: rgba(255, 0, 85, 0.25);
+  
+  --border-color: rgba(0, 255, 65, 0.15);
+  --border-color-active: rgba(0, 255, 65, 0.5);
+  
+  --text-primary: #e5fbe7;
+  --text-secondary: #82a885;
+  --text-muted: #416145;
+  
+  --font-mono: var(--font-mono), 'Fira Code', 'Courier New', monospace;
+  --font-sans: var(--font-sans), 'Outfit', 'Inter', sans-serif;
+  
+  --grid-size: 20px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+  /* Digital grid background */
+  background-image: 
+    linear-gradient(rgba(0, 255, 65, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.02) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+}
+
+/* CRT Screen Effect Overlay */
+body::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 9998;
+  background-size: 100% 4px, 3px 100%;
+  pointer-events: none;
+}
+
+/* Scanning line animation */
+.scanline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(0, 255, 65, 0) 50%,
+    rgba(0, 255, 65, 0.08) 50%,
+    rgba(255,255,255,0)
+  );
+  background-size: 100% 20px;
+  z-index: 9997;
+  pointer-events: none;
+  animation: scanlineAnim 6s linear infinite;
+}
+
+@keyframes scanlineAnim {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+/* Custom Webkit Scrollbars for Terminal look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+  border-left: 1px solid var(--border-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--matrix-green-dark);
+  border: 1px solid var(--matrix-green);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--matrix-green-dim);
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  text-shadow: 0 0 5px rgba(229, 251, 231, 0.2);
+}
+
+a {
+  color: var(--matrix-green);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  text-shadow: 0 0 8px var(--matrix-green);
+  color: var(--text-primary);
+}
+
+/* Common terminal-style helper classes */
+.terminal-glow {
+  text-shadow: 0 0 8px var(--matrix-green-glow-strong);
+}
+
+.terminal-border {
+  border: 1px solid var(--border-color);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.terminal-border:hover {
+  border-color: var(--border-color-active);
+  box-shadow: 0 0 15px var(--matrix-green-glow);
+}
+
+.terminal-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.terminal-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--matrix-green-dim);
+  opacity: 0.7;
+}
+
+.terminal-panel-purple::before {
+  background: var(--neon-purple);
+}
+
+.terminal-panel-red::before {
+  background: var(--neon-red);
+}
+
+/* Cyber Button */
+.cyber-button {
+  background: transparent;
+  border: 1px solid var(--matrix-green);
+  color: var(--matrix-green);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  outline: none;
+}
+
+.cyber-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+  transition: all 0.6s ease;
+}
+
+.cyber-button:hover {
+  background: rgba(0, 255, 65, 0.05);
+  box-shadow: 0 0 10px var(--matrix-green-glow-strong);
+  text-shadow: 0 0 5px var(--matrix-green);
+}
+
+.cyber-button:hover::after {
+  left: 100%;
+}
+
+.cyber-button:active {
+  background: rgba(0, 255, 65, 0.15);
+}
+
+/* Glitch text effect on hover / active */
+.glitch-text {
+  position: relative;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-dark);
+}
+
+.glitch-text::before {
+  left: 2px;
+  text-shadow: -1px 0 #ff0055;
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim-1 5s infinite linear alternate-reverse;
+}
+
+.glitch-text::after {
+  left: -2px;
+  text-shadow: -1px 0 #00ff41;
+  clip: rect(85px, 450px, 140px, 0);
+  animation: glitch-anim-2 5s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim-1 {
+  0% { clip: rect(20px, 9999px, 66px, 0); }
+  5% { clip: rect(80px, 9999px, 5px, 0); }
+  10% { clip: rect(10px, 9999px, 85px, 0); }
+  15% { clip: rect(55px, 9999px, 40px, 0); }
+  20% { clip: rect(30px, 9999px, 90px, 0); }
+  25% { clip: rect(75px, 9999px, 12px, 0); }
+  30% { clip: rect(5px, 9999px, 50px, 0); }
+  35% { clip: rect(85px, 9999px, 70px, 0); }
+  40% { clip: rect(45px, 9999px, 20px, 0); }
+  45% { clip: rect(90px, 9999px, 95px, 0); }
+  50% { clip: rect(15px, 9999px, 55px, 0); }
+  55% { clip: rect(65px, 9999px, 10px, 0); }
+  60% { clip: rect(35px, 9999px, 80px, 0); }
+  65% { clip: rect(80px, 9999px, 30px, 0); }
+  70% { clip: rect(25px, 9999px, 65px, 0); }
+  75% { clip: rect(95px, 9999px, 45px, 0); }
+  80% { clip: rect(10px, 9999px, 90px, 0); }
+  85% { clip: rect(70px, 9999px, 15px, 0); }
+  90% { clip: rect(40px, 9999px, 75px, 0); }
+  95% { clip: rect(85px, 9999px, 5px, 0); }
+  100% { clip: rect(15px, 9999px, 60px, 0); }
+}
+
+@keyframes glitch-anim-2 {
+  0% { clip: rect(70px, 9999px, 105px, 0); }
+  5% { clip: rect(15px, 9999px, 85px, 0); }
+  10% { clip: rect(95px, 9999px, 30px, 0); }
+  15% { clip: rect(40px, 9999px, 70px, 0); }
+  20% { clip: rect(85px, 9999px, 15px, 0); }
+  25% { clip: rect(30px, 9999px, 95px, 0); }
+  30% { clip: rect(65px, 9999px, 40px, 0); }
+  35% { clip: rect(10px, 9999px, 60px, 0); }
+  40% { clip: rect(90px, 9999px, 10px, 0); }
+  45% { clip: rect(50px, 9999px, 80px, 0); }
+  50% { clip: rect(80px, 9999px, 25px, 0); }
+  55% { clip: rect(25px, 9999px, 90px, 0); }
+  60% { clip: rect(60px, 9999px, 45px, 0); }
+  65% { clip: rect(5px, 9999px, 70px, 0); }
+  70% { clip: rect(75px, 9999px, 15px, 0); }
+  75% { clip: rect(45px, 9999px, 85px, 0); }
+  80% { clip: rect(95px, 9999px, 55px, 0); }
+  85% { clip: rect(15px, 9999px, 35px, 0); }
+  90% { clip: rect(65px, 9999px, 75px, 0); }
+  95% { clip: rect(30px, 9999px, 50px, 0); }
+  100% { clip: rect(85px, 9999px, 15px, 0); }
+}

@@ -1,0 +1,216 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  gap: 1.5rem;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+  font-family: var(--font-mono);
+}
+
+.logoContainer {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.logoGlitch {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--matrix-green);
+  position: relative;
+  text-shadow: 0 0 10px var(--matrix-green-glow);
+  letter-spacing: 2px;
+}
+
+.version {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.statusDisplay {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  background: rgba(0, 255, 65, 0.05);
+  padding: 0.25rem 0.75rem;
+  border: 1px dashed var(--border-color);
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  background-color: var(--matrix-green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--matrix-green);
+  display: inline-block;
+  animation: pulse 2s infinite;
+}
+
+.statusText {
+  color: var(--matrix-green);
+  font-weight: bold;
+}
+
+.clock {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+/* Diagnostics Banner */
+.diagnostics {
+  padding: 1.5rem;
+  border-radius: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.gridOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(10, 15, 10, 0.6) 50%, rgba(0, 0, 0, 0.8) 50%), linear-gradient(90deg, rgba(0, 255, 0, 0.03), rgba(0, 0, 0, 0), rgba(0, 255, 0, 0.03));
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}
+
+.diagContent {
+  position: relative;
+  z-index: 1;
+}
+
+.diagContent h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--matrix-green);
+}
+
+.diagDescription {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  max-width: 800px;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+.diagStats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.statBox {
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid var(--matrix-green-dim);
+  padding-left: 0.75rem;
+}
+
+.statLabel {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: bold;
+  font-family: var(--font-mono);
+}
+
+/* Dashboard Grid */
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  flex-grow: 1;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  min-height: 350px;
+  border-radius: 0;
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.columnIndicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.columnHeader h3 {
+  font-size: 0.95rem;
+  font-family: var(--font-mono);
+}
+
+.columnBody {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+  gap: 1rem;
+}
+
+.placeholderText {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  font-family: var(--font-mono);
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+    box-shadow: 0 0 2px var(--matrix-green);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 10px var(--matrix-green);
+  }
+  100% {
+    opacity: 0.4;
+    box-shadow: 0 0 2px var(--matrix-green);
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  
+  .clock {
+    align-self: flex-end;
+  }
+}

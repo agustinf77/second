@@ -1,0 +1,84 @@
+# 🧠 PROYECTO: NeonCortex (Second Brain App)
+## Documento de Requerimientos Funcionales (FRD)
+
+---
+
+**Instrucciones para el Agente de Desarrollo de IA:** 
+Actúa como un Tech Lead y Full-Stack Developer de alto nivel. Tu objetivo es desarrollar, paso a paso, una aplicación web llamada **"NeonCortex"** (Un Segundo Cerebro). A continuación se detalla el Documento de Requerimientos Funcionales. Al final del documento se encuentran las directrices sobre cómo proceder.
+
+---
+
+### 1. Visión General del Producto
+NeonCortex es una aplicación web que funciona como un "Segundo Cerebro" persistente en la nube. Su objetivo principal es almacenar, clasificar y mostrar información vital del usuario basada en su relevancia temporal. Los datos ingresarán tanto desde la propia interfaz web como desde un bot de Telegram integrado.
+
+---
+
+### 2. Diseño de Interfaz y UX (Estética)
+La aplicación debe tener una estética fuertemente inspirada en el **Cyberpunk y The Matrix**. 
+
+*   **Paleta de Colores:** 
+    *   Fondo negro profundo: `#050505`
+    *   Acentos primarios (Verde Matrix): `#00FF41` o `#03A062`
+    *   Acentos secundarios (Morado neón o Rojo advertencia para elementos críticos)
+*   **Tipografía:** 
+    *   Fuentes "Monospace" (como *Fira Code*, *Roboto Mono* o *JetBrains Mono*) para los datos, fechas y registros numéricos.
+    *   Fuentes Sans-serif modernas e industriales para los títulos.
+*   **Efectos Visuales:** 
+    *   Efectos de "Glow" (resplandor) sutil en los contenedores y botones activos.
+    *   Estilo visual tipo "Terminal" o "Dashboard de Hacker".
+    *   Transiciones fluidas tipo "glitch" o efecto de máquina de escribir al cargar nuevos datos.
+    *   Bordes afilados (mínimo `border-radius`), líneas divisorias finas en color verde oscuro.
+
+---
+
+### 3. Arquitectura de la Información (Los 3 Módulos de Memoria)
+El núcleo de la aplicación es un Dashboard principal dividido en tres paneles:
+
+#### A. RAM (Memoria a Corto Plazo)
+*   **Definición:** Tareas inmediatas, cosas que pasaron hace poco o recordatorios efímeros que expiran rápido (rango de 24 a 72 horas).
+*   **Ejemplos:** "Llamar al cliente X hoy a las 15h", "Comprar café", notas rápidas tomadas al vuelo.
+*   **Comportamiento UI:** Tipo lista de tareas dinámica. Los elementos se pueden archivar o marcar como completados de un click.
+
+#### B. CACHÉ (Memoria a Mediano Plazo)
+*   **Definición:** Eventos o hitos importantes que ocurrirán en un contexto aproximado de 15 días hacia adelante.
+*   **Ejemplos:** Turnos médicos, fechas de vencimiento de facturas, recitales, cumpleaños inminentes.
+*   **Comportamiento UI:** Visualización estructurada tipo "Timeline" (Línea de tiempo) horizontal o vertical. Debe mostrar cuántos días faltan para cada evento con un formato de cuenta regresiva (ej: `T - 5 días`).
+
+#### C. DISCO DURO (Memoria a Largo Plazo)
+*   **Definición:** Grandes hitos, información persistente y directrices de vida que no cambian a menudo.
+*   **Ejemplos:** Objetivos anuales (OKRs personales), historial médico importante (alergias, tipo de sangre, cirugías pasadas), valores personales o una lista de libros leídos.
+*   **Comportamiento UI:** Diseño de "Bóveda" o "Tarjetas de Archivo". Debe transmitir solidez y permanencia. Datos estructurados en bloques fijos que requieran confirmación manual para editar.
+
+---
+
+### 4. Flujo de Datos e Integración (Backend & Telegram)
+La base de datos se conectará mediante una arquitectura desacoplada:
+
+*   **API REST / GraphQL:** El frontend debe consumir una API que devuelva los datos categorizados:
+    *   `/api/memories?type=short`
+    *   `/api/memories?type=medium`
+    *   `/api/memories?type=long`
+*   **Modelo de Datos Base (Esquema conceptual):**
+    ```typescript
+    interface Memory {
+      id: string; // UUID
+      content: string; // Texto plano o Markdown
+      category: 'SHORT' | 'MEDIUM' | 'LONG';
+      created_at: Date;
+      target_date?: Date; // Opcional, obligatorio para MEDIUM
+      status: 'ACTIVE' | 'ARCHIVED' | 'COMPLETED';
+    }
+    ```
+*   **Entrada vía Telegram (Webhook):** La app deberá tener un endpoint preparado para recibir peticiones POST desde un bot de Telegram. La lógica backend utilizará IA para clasificar el texto entrante y asignarlo automáticamente a la categoría correspondiente (RAM, Caché o Disco Duro) basándose en el contexto del mensaje.
+
+---
+
+### 5. Instrucciones de Ejecución para la IA Desarrolladora
+No escribas todo el código de una sola vez para evitar errores de contexto. Sigue estrictamente este orden y detente a pedir la aprobación del usuario antes de pasar al siguiente paso:
+
+*   **Fase 1: Elección de Stack y Setup.** Propón el Stack tecnológico más moderno y rápido de implementar para esta aplicación web (Ej: Next.js + Tailwind CSS) y proporciona los comandos iniciales para levantar el proyecto base.
+*   **Fase 2: Mockups de Datos & Arquitectura UI.** Crea un archivo de datos falsos (mock data) con ejemplos de las 3 memorias. Luego, construye la estructura de componentes principal del Dashboard.
+*   **Fase 3: Estilización Cyberpunk.** Aplica toda la capa de diseño Matrix/Cyberpunk usando CSS o Tailwind.
+*   **Fase 4: Lógica y Conexión Backend.** Prepara la lógica para recibir los datos de una base de datos real y el endpoint webhook para el bot de Telegram.
+
+**Responde con la "Fase 1" para comenzar el desarrollo.**
