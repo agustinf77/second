@@ -173,31 +173,219 @@ GET /api/memories?q=texto&include=archived&source=TELEGRAM
 
 ## 5. Bot de Telegram + Clasificación con Gemini
 
-> Detalle técnico completo en `TELEGRAM_IMPLEMENTATION.md`
-
-### Resumen del flujo
+### Flujo completo
 
 ```
-Mensaje en Telegram
-  → POST /api/telegram
-  → validar secret token
-  → Gemini Flash clasifica → { category, target_date, importance, content }
-  → guardar en DB con source: "TELEGRAM"
-  → responder confirmación al usuario
+Usuario escribe en Telegram
+        ↓
+Telegram hace POST a /api/telegram
+        ↓
+Endpoint extrae el texto y valida el secret
+        ↓
+Gemini Flash clasifica → { category, target_date, importance, content }
+        ↓
+Se guarda en SQLite con source: "TELEGRAM"
+        ↓
+Se responde al usuario en Telegram con confirmación
 ```
 
-### Respuesta diaria proactiva (spaced repetition)
+### Credenciales necesarias
 
-El bot envía un digest a las 9am con las memorias `nextReview <= hoy`.
-Implementar con un cron job o con Vercel Cron Jobs.
+**Bot de Telegram**
+1. Hablar con `@BotFather` en Telegram
+2. Enviar `/newbot` y seguir los pasos
+3. Copiar el token que devuelve → `TELEGRAM_BOT_TOKEN`
 
-### Variables de entorno necesarias
+**Gemini API Key**
+1. Ir a [aistudio.google.com](https://aistudio.google.com)
+2. Iniciar sesión con Google → `Get API Key` → `Create API key`
+3. Copiar la key → `GEMINI_API_KEY`
+
+**Webhook secret**
+```bash
+openssl rand -hex 32   # → TELEGRAM_WEBHOOK_SECRET
+```
+
+### Variables de entorno a agregar al `.env`
 
 ```env
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_WEBHOOK_SECRET=
 GEMINI_API_KEY=
 ```
+
+### Dependencia a instalar
+
+```bash
+npm install @google/generative-ai
+```
+
+### Archivos a crear
+
+**`src/lib/gemini.ts`** — clasificación con IA
+
+```typescript
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+const CLASSIFICATION_PROMPT = `
+Sos un sistema de clasificación de memoria personal.
+Analizá el siguiente mensaje y devolvé ÚNICAMENTE un JSON con esta estructura, sin markdown ni texto extra:
+
+{
+  "category": "SHORT" | "MEDIUM" | "LONG",
+  "content": "texto limpio y conciso de la memoria",
+  "target_date": "ISO 8601 string o null",
+  "importance": "LOW" | "MEDIUM" | "HIGH"
+}
+
+Reglas:
+- SHORT: tareas inmediatas, recordatorios de hoy o mañana, cosas efímeras (24-72hs)
+- MEDIUM: eventos con fecha concreta en los próximos ~15 días (turnos, vencimientos, eventos)
+- LONG: información persistente, objetivos, datos personales, sin fecha de expiración
+
+Para MEDIUM, inferí la target_date a partir de hoy: {TODAY}.
+Si el mensaje dice "en 5 días", calculá la fecha exacta.
+Si no hay fecha clara, devolvé target_date: null.
+
+Mensaje:
+`;
+
+export interface ClassificationResult {
+  category: 'SHORT' | 'MEDIUM' | 'LONG';
+  content: string;
+  target_date: string | null;
+  importance: 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
+export async function classifyMemory(text: string): Promise<ClassificationResult> {
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const today = new Date().toISOString().split('T')[0];
+  const prompt = CLASSIFICATION_PROMPT.replace('{TODAY}', today) + text;
+  const result = await model.generateContent(prompt);
+  return JSON.parse(result.response.text().trim()) as ClassificationResult;
+}
+```
+
+**`src/lib/telegram.ts`** — helper para responder mensajes
+
+```typescript
+const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
+
+export async function sendMessage(chatId: number, text: string): Promise<void> {
+  await fetch(`${TELEGRAM_API}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text }),
+  });
+}
+
+export function validateWebhookSecret(request: Request): boolean {
+  const secret = request.headers.get('X-Telegram-Bot-Api-Secret-Token');
+  return secret === process.env.TELEGRAM_WEBHOOK_SECRET;
+}
+```
+
+**`src/app/api/telegram/route.ts`** — webhook endpoint
+
+```typescript
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { classifyMemory } from '@/lib/gemini';
+import { sendMessage, validateWebhookSecret } from '@/lib/telegram';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  SHORT: '🟢 RAM (corto plazo)',
+  MEDIUM: '🟣 CACHE (mediano plazo)',
+  LONG: '🔴 VAULT (largo plazo)',
+};
+
+export async function POST(request: Request) {
+  if (!validateWebhookSecret(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const message = body?.message;
+
+  if (!message?.text || !message?.chat?.id) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const chatId: number = message.chat.id;
+  const text: string = message.text;
+
+  if (text.startsWith('/')) {
+    await sendMessage(chatId, 'NeonCortex activo. Mandame cualquier cosa que quieras recordar y la clasifico automáticamente.');
+    return NextResponse.json({ ok: true });
+  }
+
+  try {
+    const classification = await classifyMemory(text);
+
+    await prisma.memoryNode.create({
+      data: {
+        content: classification.content,
+        level: classification.category,
+        targetDate: classification.target_date ? new Date(classification.target_date) : null,
+        importance: classification.importance,
+        source: 'TELEGRAM',
+      },
+    });
+
+    const label = CATEGORY_LABELS[classification.category];
+    let confirmMsg = `✅ Guardado en ${label}\n"${classification.content}"`;
+
+    if (classification.category === 'MEDIUM' && classification.target_date) {
+      const diffDays = Math.ceil(
+        (new Date(classification.target_date).getTime() - Date.now()) / 86400000
+      );
+      confirmMsg += `\nT - ${diffDays} días`;
+    }
+
+    await sendMessage(chatId, confirmMsg);
+  } catch (error) {
+    console.error('Error processing Telegram message:', error);
+    await sendMessage(chatId, '❌ Error al procesar el mensaje. Intentá de nuevo.');
+  }
+
+  return NextResponse.json({ ok: true });
+}
+```
+
+### Registrar el webhook con Telegram
+
+Una vez que la app esté en una URL pública, correr **una sola vez**:
+
+```bash
+curl -X POST "https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://TU-DOMINIO.com/api/telegram",
+    "secret_token": "TU_WEBHOOK_SECRET"
+  }'
+
+# Verificar que quedó registrado:
+curl "https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getWebhookInfo"
+```
+
+### Dev local con ngrok
+
+```bash
+# Terminal 1
+npm run dev
+
+# Terminal 2
+ngrok http 3000
+# Copiar la URL HTTPS que da ngrok y usarla en el curl de arriba
+# Cada vez que se reinicia ngrok hay que re-registrar el webhook
+```
+
+### Respuesta diaria proactiva (spaced repetition)
+
+El bot envía un digest a las 9am con las memorias `nextReview <= hoy`.
+Implementar con Vercel Cron Jobs una vez en producción.
 
 ---
 
@@ -295,7 +483,15 @@ En dev se puede seguir usando SQLite sin cambiar nada — Prisma maneja ambos.
 - [ ] Resultados agrupados con highlight del término
 
 ### Telegram + Gemini
-- [ ] Todo lo detallado en `TELEGRAM_IMPLEMENTATION.md`
+- [ ] Obtener `TELEGRAM_BOT_TOKEN` desde @BotFather
+- [ ] Obtener `GEMINI_API_KEY` desde aistudio.google.com
+- [ ] Generar `TELEGRAM_WEBHOOK_SECRET` con openssl
+- [ ] `npm install @google/generative-ai`
+- [ ] Crear `src/lib/gemini.ts`
+- [ ] Crear `src/lib/telegram.ts`
+- [ ] Crear `src/app/api/telegram/route.ts`
+- [ ] Levantar ngrok y registrar el webhook
+- [ ] Testear enviando mensajes al bot
 
 ### Auth
 - [ ] NextAuth con Google
